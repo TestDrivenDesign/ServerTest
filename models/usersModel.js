@@ -17,6 +17,20 @@ function postUser(name, userData) {
   });
 }
 
+function fetchUsers() {
+  return new Promise((resolve, reject) => {
+    pool.query(
+      `SELECT * FROM users;`,
+      (error, response, fields) => {
+        if (error) {return reject(error);}
+        return resolve(response, fields)
+      }
+    );
+  });
+
+
+}
+
 // function showTable(name) {
 
 //   return new Promise((resolve, reject) => {
@@ -36,6 +50,6 @@ async function usersModel(tableName, userData) {
   return { seeder };
 }
 
-module.exports = usersModel;
+module.exports = {usersModel, fetchUsers};
 
 
