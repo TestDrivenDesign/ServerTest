@@ -1,7 +1,11 @@
 const express = require("express");
-const cors = require('cors');
+const cors = require("cors");
 
-const {usersModel, fetchUsers} = require("./models/usersModel");
+const {
+  usersModel,
+  fetchUsers,
+  fetchUsersByEmail,
+} = require("./models/usersModel");
 
 const app = express();
 const PORT = 3001;
@@ -14,29 +18,35 @@ app.get("/", (req, res) => {
 });
 
 app.get("/users", (req, res) => {
-  console.log(req)
+  console.log(req);
   fetchUsers().then((dbResponse) => {
-    console.log(dbResponse)
-    res.status(200).send({message: dbResponse})
-  }) 
-})
+    console.log(dbResponse);
+    res.status(200).send({ message: dbResponse });
+  });
+});
 app.get("/users/:email", (req, res) => {
-  console.log(req)
-  fetchUsers().then((dbResponse) => {
-    console.log(dbResponse)
-    res.status(200).send({message: dbResponse})
-  }) 
-})
-
-
+  console.log(req);
+  const { email } = req.params;
+  const regex = new RegExp(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}$`);
+  if (regex.test(email)) {
+    fetchUsersByEmail(email).then((dbResponse) => {
+      console.log(dbResponse);
+      res.status(200).send({ message: dbResponse });
+    });
+  } else {
+    res.status(400).send({ message: `invalid email` });
+  }
+});
 
 app.get("/health-check", (req, res) => {
+  console.log(req);
+  fetchHealthCheck().then((dbResponse) => {});
   res.json({ message: "HAL up and running" });
 });
 
 app.post("/users", (req, res) => {
   newUser = req.body;
-  usersModel('users', newUser).then((dbResponse) => {
+  usersModel("users", newUser).then((dbResponse) => {
     res.status(201).send(dbResponse);
   });
 });

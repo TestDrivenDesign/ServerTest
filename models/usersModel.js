@@ -1,5 +1,4 @@
-const pool = require('../connection');
-
+const pool = require("../connection");
 
 function postUser(name, userData) {
   let data = [Object.values(userData)];
@@ -8,9 +7,12 @@ function postUser(name, userData) {
   // ) => [user_id, first_name, last_name, email, password]);
   return new Promise((resolve, reject) => {
     pool.query(
-      `INSERT INTO ${name} (first_name, last_name, email, password) VALUES ?;`, [data],
+      `INSERT INTO ${name} (first_name, last_name, email, password) VALUES ?;`,
+      [data],
       (error, response, fields) => {
-        if (error) { return reject(error); }
+        if (error) {
+          return reject(error);
+        }
         return resolve(response, fields);
       }
     );
@@ -19,16 +21,28 @@ function postUser(name, userData) {
 
 function fetchUsers() {
   return new Promise((resolve, reject) => {
+    pool.query(`SELECT * FROM users;`, (error, response, fields) => {
+      if (error) {
+        return reject(error);
+      }
+      return resolve(response, fields);
+    });
+  });
+}
+
+function fetchUsersByEmail(email) {
+  return new Promise((resolve, reject) => {
     pool.query(
-      `SELECT * FROM users;`,
+      `SELECT * FROM users WHERE users.email = ?;`,
+      [email],
       (error, response, fields) => {
-        if (error) {return reject(error);}
-        return resolve(response, fields)
+        if (error) {
+          return reject(error);
+        }
+        return resolve(response, fields);
       }
     );
   });
-
-
 }
 
 // function showTable(name) {
@@ -50,6 +64,4 @@ async function usersModel(tableName, userData) {
   return { seeder };
 }
 
-module.exports = {usersModel, fetchUsers};
-
-
+module.exports = { usersModel, fetchUsers, fetchUsersByEmail };
