@@ -31,17 +31,15 @@ function fetchUsers() {
 }
 
 function fetchUsersByEmail(email) {
-  console.log(email);
   return new Promise((resolve, reject) => {
     pool.query(
       `SELECT * FROM users WHERE users.email = ?;`,
       [email],
       (error, response, fields) => {
-        if (error) {
+        if (error) {          
           return reject(error);
-        }
-        console.log(resolve(response, fields));
-        //return resolve(response, fields);
+        }        
+        return resolve(response, fields);
       }
     );
   });

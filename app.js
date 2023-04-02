@@ -20,10 +20,8 @@ app.get("/", (req, res) => {
 });
 
 app.get("/users", (req, res) => {
-  console.log(req);
-  if (!req.body.email) {
+  if (!req.body.email) {    
     fetchUsers().then((dbResponse) => {
-      console.log(dbResponse);
       res.status(200).send({ message: dbResponse });
     });
   } else {
@@ -31,7 +29,6 @@ app.get("/users", (req, res) => {
     const regex = new RegExp(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}$`);
     if (regex.test(email)) {
       fetchUsersByEmail(email).then((dbResponse) => {
-        console.log(dbResponse);
         res.status(200).send({ message: dbResponse });
       });
     } else {
@@ -40,19 +37,7 @@ app.get("/users", (req, res) => {
   }
 });
 
-app.get("/users/:email", (req, res) => {
-  console.log(req);
-  const { email } = req.body;
-  const regex = new RegExp(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}$`);
-  if (regex.test(email)) {
-    fetchUsersByEmail(email).then((dbResponse) => {
-      console.log(dbResponse);
-      res.status(200).send({ message: dbResponse });
-    });
-  } else {
-    res.status(400).send({ message: `invalid email` });
-  }
-});
+
 
 app.get("/health-check", (req, res) => {
   console.log(req);
@@ -64,11 +49,27 @@ app.get("/users/image", (req, res) => {});
 
 app.post("/users/login", upload.none(), (req, res) => {
   const { email, password } = req.body;
-  //console.log(email, password);
-  fetchUsersByEmail(email).then((dbResponse) => {
-    const { email, password } = dbResponse;
-    console.log(dbResponse);
-  });
+  // regex seems to catch no "@" but misses no .
+  const regex = new RegExp(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(?=[a-zA-Z]{2,}$)[a-zA-Z]{2,}$`);
+  if (!req.body.email && !req.body.password) {        
+    res.status(400).send({ message: 'no email or password provided'});
+  } else  if (!req.body.password) {
+    res.status(400).send({ message: 'no password provided'})
+  } else if (!req.body.email){
+    res.status(400).send({ message: 'no email provided'})
+  }  
+  if (regex.test(email)){
+    fetchUsersByEmail(email).then((dbResponse) => {      
+      console.log('db response at app', dbResponse[0].password);
+      if (password === dbResponse[0].password) {
+        res.status(200).send({ message: 'password verified'})
+      } else {
+        res.status(400).send({ message: 'incorrect password'})
+      }      
+    });
+  } else {
+    res.status(400).send({ message: 'invalid email'})
+  } 
 });
 
 app.listen(PORT, () => {
