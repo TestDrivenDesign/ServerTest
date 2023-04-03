@@ -7,7 +7,11 @@ const {
   usersModel,
   fetchUsers,
   fetchUsersByEmail,
+  fetchUserByUserId,
+  insertImage
 } = require("./models/usersModel");
+
+const {readToBuffer} = require('./utils/fsreadutil');
 
 const {postAssessment} = require('./models/assessment-model')
 const app = express();
@@ -106,9 +110,25 @@ app.post("/users/registration", upload.none(), (req, res) => {
 })
 app.post("/users/assessment", upload.single('file'), (req, res) => {
   const { file } = req
+  const { user_id } = req.body
+  const file_name = req.file.originalname
   const form = new FormData
   form.append('file', fs.createReadStream(req.file.path));  
-  postAssessment(form).then((apiResponse) => {
+
+  console.log(user_id)
+  fetchUserByUserId(user_id).then((dbResponse) => {
+    if (!dbResponse[0]) {
+      res.status(400).send({message: 'user does not exist'})
+    } 
+  }).then(() => {
+    return postAssessment(form)
+  })
+    .then((apiResponse) => {
+      
+      const diagnosis = apiResponse;
+      const tableData = [user_id, diagnosis, file_name, file]
+      insertImage('subs', tableData)
+
     console.log(apiResponse)
     res.status(200).send(apiResponse.toString())
   })

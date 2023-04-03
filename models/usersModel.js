@@ -45,6 +45,35 @@ function fetchUsersByEmail(email) {
   });
 }
 
+function fetchUserByUserId(userId) {
+  console.log(userId)
+  return new Promise((resolve, reject) => {
+    pool.query(
+      `SELECT * FROM users WHERE users.user_id = ?;`,
+      [userId],
+      (error, response, fields) => {
+        if (error) {          
+          return reject(error);
+        }        
+        return resolve(response, fields);
+      }
+    );
+  });
+}
+
+function insertImage(tableName, rowData) {
+
+  return new Promise((resolve, reject) => {
+    pool.query(
+      `INSERT INTO ${tableName} (user_id, diagnosis, file_name, image) VALUES ?;`, [rowData],
+      (error, response, fields) => {
+        if (error) { return reject(error); }
+        return resolve(response, fields);
+      });
+  });
+}
+insertImage
+
 //function fetchUserByEmailPassword(email, password) {}
 
 // function showTable(name) {
@@ -66,4 +95,4 @@ async function usersModel(tableName, userData) {
   return { seeder };
 }
 
-module.exports = { usersModel, fetchUsers, fetchUsersByEmail };
+module.exports = { usersModel, fetchUsers, fetchUsersByEmail, fetchUserByUserId, insertImage };
