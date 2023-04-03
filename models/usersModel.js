@@ -62,15 +62,22 @@ function insertImage(tableName, rowData) {
 
   return new Promise((resolve, reject) => {
     pool.query(
-      `INSERT INTO ${tableName} (user_id, diagnosis, file_name, image) VALUES ?;`, [rowData],
+      `INSERT INTO ${tableName} (user_id, diagnosis, file_name) VALUES ?;`, [rowData],
       (error, response, fields) => {
         if (error) { return reject(error); }
         return resolve(response, fields);
       });
   });
 }
-insertImage
 
+function fetchDiagnoses( user_id ){
+  return new Promise((resolve, reject)=>{
+      pool.query(`SELECT * FROM subs WHERE user_id = ?;`, [user_id], (error, response, fields)=>{
+          if (error) { return reject(error); }
+          return resolve(response, fields)
+      })
+  })
+}
 //function fetchUserByEmailPassword(email, password) {}
 
 // function showTable(name) {
@@ -92,4 +99,4 @@ async function usersModel(tableName, userData) {
   return { seeder };
 }
 
-module.exports = { postUser, usersModel, fetchUsers, fetchUsersByEmail, fetchUserByUserId, insertImage };
+module.exports = { postUser, usersModel, fetchUsers, fetchUsersByEmail, fetchUserByUserId, insertImage, fetchDiagnoses };
