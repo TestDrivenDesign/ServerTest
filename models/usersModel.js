@@ -60,11 +60,12 @@ function fetchUserByUserId(userId) {
 
 function insertImage(tableName, rowData) {
 
+
   return new Promise((resolve, reject) => {
     pool.query(
-      `INSERT INTO ${tableName} (user_id, diagnosis, file_name) VALUES ?;`, [rowData],
+      `INSERT INTO ${tableName} (user_id, diagnosis, file_path) VALUES ?;`, [rowData],
       (error, response, fields) => {
-        if (error) { return reject(error); }
+        if (error) { return reject(error);}
         return resolve(response, fields);
       });
   });

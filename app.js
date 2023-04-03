@@ -127,7 +127,8 @@ app.post("/users/assessment", upload.single('file'), (req, res) => {
   })
     .then((apiResponse) => {
       const diagnosis = apiResponse;
-      const tableData = [user_id, diagnosis, file_name]
+      const tableData = [[user_id, diagnosis, file_name]]
+      
       insertImage('subs', tableData)
 
     res.status(200).send(apiResponse.toString())
@@ -136,27 +137,33 @@ app.post("/users/assessment", upload.single('file'), (req, res) => {
 })
 
 app.post("/users/assessment", upload.single('file'), (req, res) => {
-  const { file } = req
-  const { user_id } = req.body
-  const file_name = req.file.originalname
-  const form = new FormData
+  const { file } = req;
+  const { user_id } = req.body;
+  const file_name = req.file.originalname;
+  //const file_path = req.file.path;
+  const form = new FormData;
+
+  console.log(req)
 
   form.append('file', fs.createReadStream(req.file.path));  
 
-  fetchUserByUserId(user_id).then((dbResponse) => {
+  fetchUserByUserId(user_id)
+  .then((dbResponse) => {
     if (!dbResponse[0]) {
       res.status(400).send({message: 'user does not exist'})
     } 
-  }).then(() => {
     return postAssessment(form)
   })
     .then((apiResponse) => {
+
       const diagnosis = apiResponse;
-      const tableData = [user_id, diagnosis, file_name, file]
+      const tableData = [user_id, diagnosis, file_path]
+      console.log(tableData)
      return  insertImage('subs', tableData)
     })
-    .then(()=>{
-      res.status(201).send({apiResponse})
+    .then((response, fields)=>{
+      console.log(response, fields)
+      //res.status(201).send({apiResponse})
   })
 })
 
