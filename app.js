@@ -2,6 +2,9 @@ const express = require("express");
 const cors = require("cors");
 const multer = require("multer");
 const upload = multer();
+const axios = require('axios');
+const FormData = require('form-data');
+const fs = require('fs');
 
 const {
   usersModel,
@@ -62,7 +65,7 @@ app.post("/users/login", upload.none(), (req, res) => {
     fetchUsersByEmail(email).then((dbResponse) => {      
       console.log('db response at app', dbResponse[0].password);
       if (password === dbResponse[0].password) {
-        res.status(200).send({ message: 'password verified'})
+        res.status(200).send(dbResponse[0])
       } else {
         res.status(400).send({ message: 'incorrect password'})
       }      
@@ -72,6 +75,33 @@ app.post("/users/login", upload.none(), (req, res) => {
   } 
 });
 
+app.post("/users/registration", upload.none(), (req, res) => {
+  const {email, password, username, first_name, second_name} = req.body;
+  const regex = new RegExp(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(?=[a-zA-Z]{2,}$)[a-zA-Z]{2,}$`)
+  if (!req.body.password) {
+    res.status(400).send({ message: 'no password provided'})
+  } else if (!req.body.email){
+    res.status(400).send({ message: 'no email provided'})
+  } else if (!req.body.first_name) {
+    res.status(400).send({mesage: 'no first_name provided'})
+  } else if (!req.body.secondd_name) {
+    res.status(400).send({mesage: 'no second_name provided'})
+  } else if (!req.body.username) {
+    res.status(400).send({mesage: 'no username provided'})
+  }
+  if (regex.test(email)) {
+    postUser({ first_name: first_name, second_name: second_name, email: email, password: password})
+  }
+
+
+})
+app.post("/users/assessment", upload.single('file'), (req, res) => {
+  const { file} = req; 
+  const form = new FormData
+  
+  console.log(typeof(file))
+
+})
 app.listen(PORT, () => {
   console.log("Server Running on PORT", PORT);
 });
