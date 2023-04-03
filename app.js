@@ -10,7 +10,8 @@ const {
   fetchUsersByEmail,
   fetchUserByUserId,
   insertImage,
-  fetchDiagnoses
+  fetchDiagnoses,
+  fetchAllDiagnoses
 } = require("./models/usersModel");
 
 const {readToBuffer} = require('./utils/fsreadutil');
@@ -131,7 +132,7 @@ app.post("/users/assessment", upload.single('file'), (req, res) => {
       
       insertImage('subs', tableData)
 
-    res.status(200).send(apiResponse.toString())
+    res.status(200).send({assessment: apiResponse.toString()})
   })
   app.get("/users/image", (req, res) => {});
 })
@@ -158,7 +159,7 @@ app.post("/users/assessment", upload.single('file'), (req, res) => {
 
       const diagnosis = apiResponse;
       const tableData = [user_id, diagnosis, file_path]
-      console.log(tableData)
+      
      return  insertImage('subs', tableData)
     })
     .then((response, fields)=>{
@@ -167,16 +168,27 @@ app.post("/users/assessment", upload.single('file'), (req, res) => {
   })
 })
 
+app.get('/subs', (req, res) => {
+  fetchAllDiagnoses().then((dbResponse)=> {
+    console.log(dbResponse)
+    res.status(200).send({response: dbResponse})
+  })
+
+
+})
+
 
 //Get all assesments
 
-app.post("/users/diagnoses", (req, res) => {
+app.post("/users/diagnoses", upload.none(), (req, res) => {
  
   const { user_id } = req.body
+  console.log(user_id)
  
   fetchDiagnoses(user_id)
   .then((dbResponse)=>{
     console.log(dbResponse)
+    res.status(200).send({diagnoses: dbResponse})
   })
   
   })

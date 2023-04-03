@@ -59,6 +59,7 @@ function fetchUserByUserId(userId) {
 }
 
 function insertImage(tableName, rowData) {
+  
 
 
   return new Promise((resolve, reject) => {
@@ -77,6 +78,16 @@ function fetchDiagnoses( user_id ){
           if (error) { return reject(error); }
           return resolve(response, fields)
       })
+  })
+}
+
+function fetchAllDiagnoses() {
+  console.log('look here')
+  return new Promise((resolve, reject) => {
+    pool.query('SELECT * FROM subs;', (error, response, fields) => {
+      if (error) { return reject(error)}
+      return resolve(response, fields)
+    })
   })
 }
 //function fetchUserByEmailPassword(email, password) {}
@@ -100,4 +111,4 @@ async function usersModel(tableName, userData) {
   return { seeder };
 }
 
-module.exports = { postUser, usersModel, fetchUsers, fetchUsersByEmail, fetchUserByUserId, insertImage, fetchDiagnoses };
+module.exports = { postUser, usersModel, fetchUsers, fetchUsersByEmail, fetchUserByUserId, insertImage, fetchDiagnoses, fetchAllDiagnoses};
