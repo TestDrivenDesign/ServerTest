@@ -1,19 +1,28 @@
 const express = require("express");
 const cors = require("cors");
 const multer = require("multer");
-const upload = multer();
-const axios = require('axios');
 const FormData = require('form-data');
 const fs = require('fs');
-
 const {
   usersModel,
   fetchUsers,
   fetchUsersByEmail,
 } = require("./models/usersModel");
 
+const {postAssessment} = require('./models/assessment-model')
 const app = express();
 const PORT = 3001;
+
+// defines storage
+const storage = multer.diskStorage({
+  destination: function (req, file, cb){
+    cb(null, './uploads/');
+  },
+  filename: function (req, file,  cb) {
+    cb(null, file.originalname )
+  }
+});
+const upload = multer({storage: storage});
 
 app.use(express.json());
 app.use(cors());
@@ -83,11 +92,11 @@ app.post("/users/registration", upload.none(), (req, res) => {
   } else if (!req.body.email){
     res.status(400).send({ message: 'no email provided'})
   } else if (!req.body.first_name) {
-    res.status(400).send({mesage: 'no first_name provided'})
+    res.status(400).send({message: 'no first_name provided'})
   } else if (!req.body.secondd_name) {
-    res.status(400).send({mesage: 'no second_name provided'})
+    res.status(400).send({message: 'no second_name provided'})
   } else if (!req.body.username) {
-    res.status(400).send({mesage: 'no username provided'})
+    res.status(400).send({message: 'no username provided'})
   }
   if (regex.test(email)) {
     postUser({ first_name: first_name, second_name: second_name, email: email, password: password})
@@ -96,11 +105,14 @@ app.post("/users/registration", upload.none(), (req, res) => {
 
 })
 app.post("/users/assessment", upload.single('file'), (req, res) => {
-  const { file} = req; 
+  const { file } = req
   const form = new FormData
+  form.append('file', fs.createReadStream(req.file.path));  
+  postAssessment(form).then((apiResponse) => {
+    console.log(apiResponse)
+    res.status(200).send(apiResponse.toString())
+  })
   
-  console.log(typeof(file))
-
 })
 app.listen(PORT, () => {
   console.log("Server Running on PORT", PORT);
