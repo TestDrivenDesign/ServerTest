@@ -1,14 +1,11 @@
 const pool = require("../connection");
 
-function postUser(name, userData) {
-  let data = [Object.values(userData)];
+function postUser(name, userData) { 
 
-  // let data = [...userData].map(({ user_id, first_name, last_name, email, password }
-  // ) => [user_id, first_name, last_name, email, password]);
   return new Promise((resolve, reject) => {
     pool.query(
       `INSERT INTO ${name} (first_name, last_name, email, password) VALUES ?;`,
-      [data],
+      [userData],
       (error, response, fields) => {
         if (error) {
           return reject(error);
@@ -95,4 +92,4 @@ async function usersModel(tableName, userData) {
   return { seeder };
 }
 
-module.exports = { usersModel, fetchUsers, fetchUsersByEmail, fetchUserByUserId, insertImage };
+module.exports = { postUser, usersModel, fetchUsers, fetchUsersByEmail, fetchUserByUserId, insertImage };

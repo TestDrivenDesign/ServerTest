@@ -6,6 +6,7 @@ const fs = require('fs');
 const {
   usersModel,
   fetchUsers,
+  postUser,
   fetchUsersByEmail,
   fetchUserByUserId,
   insertImage
@@ -15,7 +16,7 @@ const {readToBuffer} = require('./utils/fsreadutil');
 
 const {postAssessment} = require('./models/assessment-model')
 const app = express();
-const PORT = 3001;
+const PORT = 3000;
 
 // defines storage
 const storage = multer.diskStorage({
@@ -31,15 +32,18 @@ const upload = multer({storage: storage});
 app.use(express.json());
 app.use(cors());
 
+//get all endpoints !!!!!!
 app.get("/", (req, res) => {
-  res.json({ message: "I'm sorry, Alex, I'm afraid I can't do that." });
+  res.json({ message: "endpoints" });
 });
 
 app.get("/users", (req, res) => {
-  if (!req.body.email) {    
-    fetchUsers().then((dbResponse) => {
+  if (!req.body.email) {  
+    res.status(400).send({ message: {error: "No email provuded."}});
+    /*fetchUsers().then((dbResponse) => {
       res.status(200).send({ message: dbResponse });
-    });
+    });*/
+
   } else {
     const { email } = req.body;
     const regex = new RegExp(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}$`);
@@ -48,64 +52,61 @@ app.get("/users", (req, res) => {
         res.status(200).send({ message: dbResponse });
       });
     } else {
-      res.status(400).send({ message: `invalid email` });
+      res.status(400).send({ message: {error: `invalid email` }});
     }
   }
 });
 
-
-
-app.get("/health-check", (req, res) => {
-  console.log(req);
-  fetchHealthCheck().then((dbResponse) => {});
-  res.json({ message: "HAL up and running" });
-});
-
-app.get("/users/image", (req, res) => {});
-
 app.post("/users/login", upload.none(), (req, res) => {
   const { email, password } = req.body;
-  // regex seems to catch no "@" but misses no .
+
+  //Regex seems to catch no "@" but misses no 
   const regex = new RegExp(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(?=[a-zA-Z]{2,}$)[a-zA-Z]{2,}$`);
   if (!req.body.email && !req.body.password) {        
-    res.status(400).send({ message: 'no email or password provided'});
+    res.status(400).send({ message: {error: 'no email or password provided'}});
   } else  if (!req.body.password) {
-    res.status(400).send({ message: 'no password provided'})
+    res.status(400).send({ message: {error: 'no password provided'}})
   } else if (!req.body.email){
-    res.status(400).send({ message: 'no email provided'})
+    res.status(400).send({ message: {error: 'no email provided'}})
   }  
   if (regex.test(email)){
     fetchUsersByEmail(email).then((dbResponse) => {      
       console.log('db response at app', dbResponse[0].password);
       if (password === dbResponse[0].password) {
-        res.status(200).send(dbResponse[0])
+        res.status(200).send({ userData: dbResponse[0] })
       } else {
-        res.status(400).send({ message: 'incorrect password'})
+        res.status(400).send({ message: {error: 'incorrect password'}})
       }      
     });
   } else {
-    res.status(400).send({ message: 'invalid email'})
+    res.status(400).send({ message: {error: 'invalid email'}})
   } 
 });
 
 app.post("/users/registration", upload.none(), (req, res) => {
-  const {email, password, username, first_name, second_name} = req.body;
+  const {email, password, first_name, last_name} = req.body;
   const regex = new RegExp(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(?=[a-zA-Z]{2,}$)[a-zA-Z]{2,}$`)
+
+  console.log(req.body)
+
   if (!req.body.password) {
     res.status(400).send({ message: 'no password provided'})
   } else if (!req.body.email){
     res.status(400).send({ message: 'no email provided'})
   } else if (!req.body.first_name) {
     res.status(400).send({message: 'no first_name provided'})
-  } else if (!req.body.secondd_name) {
+  } else if (!req.body.last_name) {
     res.status(400).send({message: 'no second_name provided'})
-  } else if (!req.body.username) {
-    res.status(400).send({message: 'no username provided'})
-  }
+  } 
   if (regex.test(email)) {
-    postUser({ first_name: first_name, second_name: second_name, email: email, password: password})
+    let array = [[first_name, last_name, email, password]];
+    
+   postUser('users', array)
+    .then(()=>{return fetchUsersByEmail(email)})
+    .then(dbResponse=>{
+      res.status(201).send({ userData: dbResponse[0] })
+    })
   }
-
 
 })
 app.post("/users/assessment", upload.single('file'), (req, res) => {
@@ -133,6 +134,8 @@ app.post("/users/assessment", upload.single('file'), (req, res) => {
     res.status(200).send(apiResponse.toString())
   })
   
+  app.get("/users/image", (req, res) => {});
+
 })
 app.listen(PORT, () => {
   console.log("Server Running on PORT", PORT);
