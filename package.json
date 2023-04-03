@@ -2,11 +2,12 @@
 	"name": "servertest",
 	"version": "1.0.0",
 	"description": "",
-	"main": "app.js",
+	"main": "listen.js",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"production": "NODE_ENV=production nodemon app.js",
-		"development": "NODE_ENV=development nodemon app.js"
+		"development": "NODE_ENV=development nodemon app.js",
+		"start": "NODE_ENV=production node listen.js"
 	},
 	"repository": {
 		"type": "git",

@@ -14,7 +14,7 @@ function postAssessment(file) {
           })
           .then((res) => {
           //handle success
-            console.log('RESPONSE!!!', res.data.type);
+            //console.log('RESPONSE!!!', res.data.type);
             return resolve(res.data.type)
           })
         

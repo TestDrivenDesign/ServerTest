@@ -64,7 +64,7 @@ function insertImage(tableName, rowData) {
 
   return new Promise((resolve, reject) => {
     pool.query(
-      `INSERT INTO ${tableName} (user_id, diagnosis, file_path) VALUES ?;`, [rowData],
+      `INSERT INTO ${tableName} (user_id, diagnosis, file_name) VALUES ?;`, [rowData],
       (error, response, fields) => {
         if (error) { return reject(error);}
         return resolve(response, fields);
@@ -82,9 +82,8 @@ function fetchDiagnoses( user_id ){
 }
 
 function fetchAllDiagnoses() {
-  console.log('look here')
   return new Promise((resolve, reject) => {
-    pool.query('SELECT * FROM subs;', (error, response, fields) => {
+    pool.query('SELECT * FROM subs ;', (error, response, fields) => {
       if (error) { return reject(error)}
       return resolve(response, fields)
     })

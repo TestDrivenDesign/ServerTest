@@ -3,6 +3,8 @@ const cors = require("cors");
 const multer = require("multer");
 const FormData = require('form-data');
 const fs = require('fs');
+//Specific for URL paths
+var path = require('path');
 const {
   usersModel,
   fetchUsers,
@@ -16,9 +18,9 @@ const {
 
 const {readToBuffer} = require('./utils/fsreadutil');
 
-const {postAssessment} = require('./models/assessment-model')
+const {postAssessment} = require('./models/assessment-model');
 const app = express();
-const PORT = 3000;
+//const PORT = 3006;
 
 // defines storage
 const storage = multer.diskStorage({
@@ -26,13 +28,16 @@ const storage = multer.diskStorage({
     cb(null, './uploads/');
   },
   filename: function (req, file,  cb) {
-    let timestamp = Date.now()
-    cb(null, timestamp + '-' + file.originalname )
+    let timestamp = Date.now()  //Global variable!
+    nameFile = timestamp + '-' + file.originalname 
+
+    cb(null, nameFile)
   }
 });
-
 const upload = multer({storage: storage});
 
+//Set URL for image hosting
+app.use(express.static(path.join(__dirname, 'uploads')));
 app.use(express.json());
 app.use(cors());
 
@@ -41,12 +46,10 @@ app.get("/", (req, res) => {
   res.json({ message: "endpoints" });
 });
 
+
 app.get("/users", (req, res) => {
   if (!req.body.email) {  
-    res.status(400).send({ message: {error: "No email provuded."}});
-    /*fetchUsers().then((dbResponse) => {
-      res.status(200).send({ message: dbResponse });
-    });*/
+    res.status(400).send({ message: {error: "No email provided."}});
 
   } else {
     const { email } = req.body;
@@ -114,88 +117,57 @@ app.post("/users/registration", upload.none(), (req, res) => {
 app.post("/users/assessment", upload.single('file'), (req, res) => {
   const { file } = req
   const { user_id } = req.body
-  const file_name = req.file.originalname
+  const file_name = nameFile
   const form = new FormData
 
   form.append('file', fs.createReadStream(req.file.path));  
 
   fetchUserByUserId(user_id).then((dbResponse) => {
     if (!dbResponse[0]) {
-      res.status(400).send({message: 'user does not exist'})
-    } 
-  }).then(() => {
-    return postAssessment(form)
-  })
-    .then((apiResponse) => {
-      const diagnosis = apiResponse;
-      const tableData = [[user_id, diagnosis, file_name]]
-      
-      insertImage('subs', tableData)
-
-    res.status(200).send({assessment: apiResponse.toString()})
-  })
-  app.get("/users/image", (req, res) => {});
-})
-
-app.post("/users/assessment", upload.single('file'), (req, res) => {
-  const { file } = req;
-  const { user_id } = req.body;
-  const file_name = req.file.originalname;
-  //const file_path = req.file.path;
-  const form = new FormData;
-
-  console.log(req)
-
-  form.append('file', fs.createReadStream(req.file.path));  
-
-  fetchUserByUserId(user_id)
-  .then((dbResponse) => {
-    if (!dbResponse[0]) {
-      res.status(400).send({message: 'user does not exist'})
-    } 
-    return postAssessment(form)
-  })
-    .then((apiResponse) => {
-
-      const diagnosis = apiResponse;
-      const tableData = [user_id, diagnosis, file_path]
-      
-     return  insertImage('subs', tableData)
+      res.status(400).send({message: 'user does not exist'})} 
     })
-    .then((response, fields)=>{
-      console.log(response, fields)
-      //res.status(201).send({apiResponse})
-  })
+    .then(() => {
+      return postAssessment(form)
+    })
+    .then((apiResponse) => {
+        const diagnosis = apiResponse;
+        const tableData = [[user_id, diagnosis, file_name]]
+        
+        insertImage('subs', tableData)
+
+      res.status(200).send({assessment: apiResponse.toString()})
+    })
 })
-
-app.get('/subs', (req, res) => {
-  fetchAllDiagnoses().then((dbResponse)=> {
-    console.log(dbResponse)
-    res.status(200).send({response: dbResponse})
-  })
-
-
-})
-
 
 //Get all assesments
-
 app.post("/users/diagnoses", upload.none(), (req, res) => {
  
   const { user_id } = req.body
-  console.log(user_id)
+  //grabs host URL name and ports
+  const host = req.get('host')
  
   fetchDiagnoses(user_id)
   .then((dbResponse)=>{
-    console.log(dbResponse)
+
+    //Adds complete file path to output
+    for(let a = 0; a < dbResponse.length; a++){
+      dbResponse[a].file_name = 'http://' + host + '/' + dbResponse[a].file_name;
+    }
+
+    //console.log(dbResponse)
     res.status(200).send({diagnoses: dbResponse})
+  }) 
+})
+
+//Get everyone's diagnoses
+app.get('/subs', (req, res) => {
+  fetchAllDiagnoses().then((dbResponse)=> {
+    res.status(200).send({response: dbResponse})
   })
-  
-  })
+})
 
   //ERROR HANDLING
   //TDD
-
   
   //patch user details
   //delete submission
@@ -203,11 +175,15 @@ app.post("/users/diagnoses", upload.none(), (req, res) => {
   //implement password 
   //store images in databse
 
+app.get("/data", (req, res) => {
+  const host = req.get('host');
 
+  res.status(200).send({data: {host: host}})
 
-  app.get("/users/image", (req, res) => {});
-
-
-app.listen(PORT, () => {
-  console.log("Server Running on PORT", PORT);
 });
+
+/*app.listen(PORT, () => {
+  console.log("Server Running on PORT", PORT);
+});*/
+
+module.exports = app; 
