@@ -126,8 +126,11 @@ app.post("/users/registration", upload.none(), (req, res) => {
 app.post("/users/assessment", upload.single('file'), (req, res) => {
   const { file } = req
   const { user_id } = req.body
+  const { date_of_birth } = req.body
   const file_name = nameFile
   const form = new FormData
+
+
 
   form.append('file', fs.createReadStream(req.file.path));  
 
@@ -140,7 +143,9 @@ app.post("/users/assessment", upload.single('file'), (req, res) => {
     })
     .then((apiResponse) => {
         const diagnosis = apiResponse;
-        const tableData = [[user_id, diagnosis, file_name]]        
+        const tableData = [[user_id, diagnosis, date_of_birth,  file_name]]    
+        
+        console.log(tableData)
         insertImage('subs', tableData)
       res.status(200).send({assessment: apiResponse.toString()})
     })
