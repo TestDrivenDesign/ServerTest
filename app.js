@@ -80,11 +80,7 @@ console.log('error')
 
   if (regex.test(email)){
     fetchUsersByEmail(email).then((dbResponse) => { 
-      console.log(dbResponse[0])
-      //console.log(dbResponse[0].password, password, dbResponse[0].email, email  )
 
-      //if (dbResponse[0] === 'undefined'){console.log(true)}
-      
       if (dbResponse[0] === undefined) {
         res.status(401).send({message: {error: 'Invalid credentials'}})
       } else if (password !== undefined && password !== dbResponse[0].password) {
@@ -95,6 +91,7 @@ console.log('error')
 });
 
 app.post("/users/registration", upload.none(), (req, res) => {
+  
   const {email, password, first_name, last_name} = req.body;
 
   if (!password) {

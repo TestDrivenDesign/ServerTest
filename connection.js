@@ -19,12 +19,9 @@ const config =
       maxIdle: 10,
       idleTimeout: 60000,
       queueLimit: 0
-      //   database: Specific database can be selected!
+
     }
     : {};
 
-//console.log(config, environment)
-
 //Exports connectable pool
-
 module.exports = new mysql.createPool(config);
