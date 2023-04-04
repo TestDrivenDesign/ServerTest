@@ -70,47 +70,46 @@ app.post("/users/login", upload.none(), (req, res) => {
   //Regex seems to catch no "@" but misses no 
   const regex = new RegExp(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(?=[a-zA-Z]{2,}$)[a-zA-Z]{2,}$`);
   if (!req.body.email && !req.body.password) {        
-    res.status(400).send({ message: {error: 'no email or password provided'}});
+    res.status(400).send({ message: {error: 'no email noptionaly password provided'}});
   } else  if (!req.body.password) {
     res.status(400).send({ message: {error: 'no password provided'}})
   } else if (!req.body.email){
     res.status(400).send({ message: {error: 'no email provided'}})
   }  
+console.log('error')
 
   if (regex.test(email)){
     fetchUsersByEmail(email).then((dbResponse) => { 
-      console.log(dbResponse[0].password, password)
+      console.log(dbResponse[0])
+      //console.log(dbResponse[0].password, password, dbResponse[0].email, email  )
+
+      //if (dbResponse[0] === 'undefined'){console.log(true)}
       
-      if (dbResponse.length === 0) {
-        res.status(401).send({message: {error: 'no matching'}})
-      } else if (password !== dbResponse[0].password) {
-        res.status(401).send({message: {error: 'no matching password'}})
-      } else if (email === dbResponse[0].email && password === dbResponse[0].password){
-        res.status(200).send({ userData: dbResponse[0] })
-      } 
-        
+      if (dbResponse[0] === undefined) {
+        res.status(401).send({message: {error: 'Invalid credentials'}})
+      } else if (password !== undefined && password !== dbResponse[0].password) {
+        res.status(401).send({message: {error: 'Password does not match'}})
+      }   
     });
   } 
 });
 
 app.post("/users/registration", upload.none(), (req, res) => {
   const {email, password, first_name, last_name} = req.body;
-  /*const regexEmail = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(?=[a-zA-Z]{2,}$)[a-zA-Z]{2,}$/;
-  const regexPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/;*/
 
   if (!password) {
-    res.status(400).send({ message: {error: 'no password provided'}})
+    res.status(400).send({ message: {error: 'No password provided'}})
   } else if (!email){
-    res.status(400).send({ message: {error: 'no email provided'}})
+    res.status(400).send({ message: {error: 'No email provided'}})
   } else if (!first_name) {
-    res.status(400).send({message: 'no first_name provided'})
+    res.status(400).send({message: {error: 'No first_name provided'}})
   } else if (!last_name) {
-    res.status(400).send({message: 'no second_name provided'})
+    res.status(400).send({message: {error: 'No second_name provided'}})
   }
 
   fetchUsersByEmail(email).then((dbResponse) => {
     if (dbResponse[0]) {
-      res.status(400).send({message: {error: 'an account is already registered with that email'}})
+      res.status(400).send({message: {error: 'An account is already registered with that email'}})
     } 
     let array = [[first_name, last_name, email, password]];
     return postUser('users', array)    
@@ -120,7 +119,6 @@ app.post("/users/registration", upload.none(), (req, res) => {
       .then(dbResponse=>{
         res.status(201).send({ userData: dbResponse[0] })
       })   
-  
 })
 
 app.post("/users/assessment", upload.single('file'), (req, res) => {
@@ -130,13 +128,11 @@ app.post("/users/assessment", upload.single('file'), (req, res) => {
   const file_name = nameFile
   const form = new FormData
 
-
-
   form.append('file', fs.createReadStream(req.file.path));  
 
   fetchUserByUserId(user_id).then((dbResponse) => {
     if (!dbResponse[0]) {
-      res.status(400).send({message: 'user does not exist'})} 
+      res.status(400).send({message: {error: 'user does not exist'}})} 
     })
     .then(() => {
       return postAssessment(form)
@@ -144,8 +140,7 @@ app.post("/users/assessment", upload.single('file'), (req, res) => {
     .then((apiResponse) => {
         const diagnosis = apiResponse;
         const tableData = [[user_id, diagnosis, date_of_birth,  file_name]]    
-        
-        console.log(tableData)
+
         insertImage('subs', tableData)
       res.status(200).send({assessment: apiResponse.toString()})
     })
@@ -189,13 +184,8 @@ app.get('/subs', (req, res) => {
 
 app.get("/data", (req, res) => {
   const host = req.get('host');
-
   res.status(200).send({data: {host: host}})
 
 });
-
-/*app.listen(PORT, () => {
-  console.log("Server Running on PORT", PORT);
-});*/
 
 module.exports = app; 

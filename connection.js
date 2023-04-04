@@ -4,7 +4,7 @@ const mysql = require('mysql2');
 let environment = process.env.NODE_ENV || 'development';
 
 //Changes global Node variables
-require('dotenv').config({ path: `${__dirname}/.env.${environment}`, });
+require('dotenv').config({path: `${__dirname}/envs/.env.${environment}`,});
 
 const config =
   true
