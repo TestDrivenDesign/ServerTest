@@ -4,7 +4,8 @@ function postUser(name, userData) {
 
   return new Promise((resolve, reject) => {
     pool.query(
-      `INSERT INTO ${name} (first_name, last_name, email, password) VALUES ?;`, [userData],
+      `INSERT INTO ${name} (first_name, last_name, email, password) VALUES ?;`,
+      [userData],
       (error, response, fields) => {
         if (error) {
           return reject(error);
@@ -16,10 +17,8 @@ function postUser(name, userData) {
 }
 
 function fetchUsers() {
-
   return new Promise((resolve, reject) => {
-    pool.query(
-      `SELECT * FROM users;`, (error, response, fields) => {
+    pool.query(`SELECT * FROM users;`, (error, response, fields) => {
       if (error) {
         return reject(error);
       }
@@ -30,6 +29,7 @@ function fetchUsers() {
 
 function fetchUsersByEmail(email) {
 
+
   return new Promise((resolve, reject) => {
     pool.query(
       `SELECT * FROM users WHERE users.email = ?;`,
@@ -37,7 +37,8 @@ function fetchUsersByEmail(email) {
       (error, response, fields) => {
         if (error) {          
           return reject(error);
-        }        
+        }     
+   
         return resolve(response, fields);
       }
     );
@@ -45,10 +46,11 @@ function fetchUsersByEmail(email) {
 }
 
 function fetchUserByUserId(userId) {
-
+  
   return new Promise((resolve, reject) => {
     pool.query(
-      `SELECT * FROM users WHERE users.user_id = ?;`,[userId],
+      `SELECT * FROM users WHERE users.user_id = ?;`,
+      [userId],
       (error, response, fields) => {
         if (error) {          
           return reject(error);
@@ -60,7 +62,7 @@ function fetchUserByUserId(userId) {
 }
 
 function insertImage(tableName, rowData) {
-
+  
   return new Promise((resolve, reject) => {
     pool.query(
       `INSERT INTO ${tableName} (user_id, diagnosis, date_of_birth, file_name) VALUES ?;`, [rowData],
@@ -72,7 +74,6 @@ function insertImage(tableName, rowData) {
 }
 
 function fetchDiagnoses( user_id ){
-
   return new Promise((resolve, reject)=>{
       pool.query(`SELECT * FROM subs WHERE user_id = ?;`, [user_id], (error, response, fields)=>{
           if (error) { return reject(error); }
@@ -82,7 +83,6 @@ function fetchDiagnoses( user_id ){
 }
 
 function fetchAllDiagnoses() {
-
   return new Promise((resolve, reject) => {
     pool.query('SELECT * FROM subs ;', (error, response, fields) => {
       if (error) { return reject(error)}
@@ -90,5 +90,20 @@ function fetchAllDiagnoses() {
     })
   })
 }
+//function fetchUserByEmailPassword(email, password) {}
 
-module.exports = { postUser, usersModel, fetchUsers, fetchUsersByEmail, fetchUserByUserId, insertImage, fetchDiagnoses, fetchAllDiagnoses};
+// function showTable(name) {
+
+//   return new Promise((resolve, reject) => {
+//     pool.query(
+//       `SELECT * FROM ${name};`,
+//       (error, response, fields) => {
+//         if (error) { return reject(error); }
+//         return resolve(response, fields);
+//       });
+//   });
+// }
+
+
+
+module.exports = { postUser, fetchUsers, fetchUsersByEmail, fetchUserByUserId, insertImage, fetchDiagnoses, fetchAllDiagnoses};

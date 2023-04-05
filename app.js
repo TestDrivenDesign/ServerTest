@@ -20,7 +20,6 @@ const {readToBuffer} = require('./utils/fsreadutil');
 
 const {postAssessment} = require('./models/assessment-model');
 const app = express();
-//const PORT = 3006;
 
 // defines storage
 const storage = multer.diskStorage({
@@ -65,6 +64,7 @@ app.get("/users", (req, res) => {
 });
 
 app.post("/users/login", upload.none(), (req, res) => {
+
   const { email, password } = req.body;
 
   //Regex seems to catch no "@" but misses no 
@@ -76,46 +76,54 @@ app.post("/users/login", upload.none(), (req, res) => {
   } else if (!req.body.email){
     res.status(400).send({ message: {error: 'no email provided'}})
   }  
-console.log('error')
+
 
   if (regex.test(email)){
     fetchUsersByEmail(email).then((dbResponse) => { 
-
+      console.log(dbResponse)
       if (dbResponse[0] === undefined) {
         res.status(401).send({message: {error: 'Invalid credentials'}})
       } else if (password !== undefined && password !== dbResponse[0].password) {
         res.status(401).send({message: {error: 'Password does not match'}})
-      }   
+      } else {
+
+        res.status(200).send({user: dbResponse[0]})
+      }
     });
+  
   } 
 });
 
 app.post("/users/registration", upload.none(), (req, res) => {
-  
+
   const {email, password, first_name, last_name} = req.body;
 
   if (!password) {
-    res.status(400).send({ message: {error: 'No password provided'}})
+    return res.status(400).send({ message: {error: 'No password provided'}})
   } else if (!email){
-    res.status(400).send({ message: {error: 'No email provided'}})
+    return res.status(400).send({ message: {error: 'No email provided'}})
   } else if (!first_name) {
-    res.status(400).send({message: {error: 'No first_name provided'}})
+    return res.status(400).send({message: {error: 'No first_name provided'}})
   } else if (!last_name) {
-    res.status(400).send({message: {error: 'No second_name provided'}})
+    return res.status(400).send({message: {error: 'No second_name provided'}})
   }
 
-  fetchUsersByEmail(email).then((dbResponse) => {
-    if (dbResponse[0]) {
-      res.status(400).send({message: {error: 'An account is already registered with that email'}})
-    } 
-    let array = [[first_name, last_name, email, password]];
-    return postUser('users', array)    
-  })
-   
-      .then(()=>{return fetchUsersByEmail(email)})
-      .then(dbResponse=>{
-        res.status(201).send({ userData: dbResponse[0] })
-      })   
+  fetchUsersByEmail(email)
+  .then((dbResponse) => {
+
+    if (dbResponse.length > 0) {
+      res.status(400).send({message: {error: 'An account is already registered with that email'}})}
+      else {
+      let array = [[first_name, last_name, email, password]]; 
+       postUser('users', array)
+       .then((response) =>{
+        return fetchUsersByEmail(email)
+       })
+       .then((response)=>{
+        res.status(400).send({user: response})
+       })
+    }
+  })     
 })
 
 app.post("/users/assessment", upload.single('file'), (req, res) => {
